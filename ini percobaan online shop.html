@@ -1,0 +1,454 @@
+<!DOCTYPE html><html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Marketplace</title>
+<style>
+body{font-family:Arial;margin:0;background:#f2f2f2}
+header{background:#ff5722;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+button{cursor:pointer}
+.container{padding:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.card{background:#fff;border-radius:10px;padding:10px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.card img{width:100%;height:120px;object-fit:cover;border-radius:8px}
+.card h4{margin:6px 0;font-size:14px}
+.price{color:#ff5722;font-weight:bold}
+.old{color:#888;text-decoration:line-through;font-size:12px}
+.actions{display:flex;gap:5px;margin-top:6px}
+.actions button{flex:1;border:none;padding:6px;border-radius:6px;color:#fff;font-size:12px}
+.btn-view{background:#2196f3}
+.btn-buy{background:#ff5722}
+.flash{background:#fff3e0;padding:12px;margin-top:20px;border-radius:10px}
+.timer{color:red;font-weight:bold}
+.cart-box{background:#fff;border-radius:10px;padding:10px;margin-top:20px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center}
+.modal-box{background:#fff;padding:20px;border-radius:10px;width:340px;max-height:90vh;overflow:auto}
+.modal-box img{width:100%;border-radius:8px}
+.checkout-item{display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:6px 0}
+.total{font-weight:bold;font-size:16px;margin-top:10px}
+.orders-panel{position:fixed;top:0;right:0;width:320px;height:100%;background:#fff;box-shadow:-2px 0 10px rgba(0,0,0,.2);padding:15px;overflow:auto;display:none}
+.order-card{border:1px solid #eee;border-radius:8px;padding:10px;margin-bottom:10px}
+.status{font-weight:bold;color:#ff5722}
+.rate-btn{background:#4caf50;color:#fff;border:none;padding:6px 8px;border-radius:6px;margin-top:6px}/* CHAT */ .chat-box{position:fixed;bottom:15px;right:15px;width:260px;height:320px;background:#fff;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.2);display:none;flex-direction:column} .chat-header{background:#2196f3;color:#fff;padding:6px;border-radius:10px 10px 0 0} .chat-messages{flex:1;overflow:auto;padding:6px;font-size:13px} .msg-user{text-align:right;margin:4px} .msg-seller{text-align:left;margin:4px} .chat-input{display:flex;border-top:1px solid #ddd} .chat-input input{flex:1;border:none;padding:6px} .chat-input button{border:none;background:#2196f3;color:#fff;padding:6px}
+
+input,textarea,select{width:100%;margin-top:6px;margin-bottom:10px;padding:6px;border:1px solid #ccc;border-radius:6px} .checkout-btn{width:100%;background:#ff5722;border:none;color:#fff;padding:8px;border-radius:6px} </style>
+
+</head>
+<body><header>
+<span>shopee</span>
+<div>
+<button onclick="toggleOrders()">Pesanan📦</button>
+<button onclick="toggleChat()">Chat🗨️</button>
+</div>
+</header><div class="container"><h3>Produk</h3>
+<div id="products" class="grid"></div><div class="flash">
+<h3>Flash Sale</h3>
+<div>Ganti dalam: <span id="timer" class="timer"></span></div>
+<div id="flashProducts" class="grid"></div>
+</div><div class="cart-box">
+<h3>Keranjang</h3>
+<ul id="cartList"></ul>
+<div class="total">Total: Rp<span id="cartTotal">0</span></div>
+<button class="checkout-btn" onclick="openCheckout()">Checkout</button>
+</div></div><!-- PANEL PESANAN --><div class="orders-panel" id="ordersPanel">
+<button onclick="toggleOrders()" style="float:right">Tutup ✖</button>
+<h3>Pesanan Saya</h3>
+<div id="ordersList"></div>
+</div><!-- DETAIL PRODUK --><div class="modal" id="productModal">
+<div class="modal-box">
+<img id="detailImg">
+<h3 id="detailName"></h3>
+<div id="detailPrice" class="price"></div><div id="variantArea">
+<label>Pilih Varian</label>
+<select id="variantSelect"></select>
+</div><button class="checkout-btn" onclick="addToCart()">Tambah ke Keranjang</button> <br><br> <button onclick="closeModal()">Tutup</button>
+
+</div>
+</div>
+ <!-- CHECKOUT -->
+ <div class="modal" id="checkoutModal">
+<div class="modal-box">
+<h3>Checkout</h3>
+<div id="checkoutItems"></div>
+<div class="total">Total Produk: Rp<span id="checkoutTotal"></span></div><input placeholder="Nama" id="nama">
+<input placeholder="No HP" id="hp">
+<textarea placeholder="Alamat" id="alamat"></textarea><select id="kurir">
+<option value="10000">JNE Expres - 10000</option>
+<option value="17000">JNE kargo - 17000</option>
+<option value="7000">JNE hemat - 7000</option>
+<option value="12000">J&T expres - 12000</option>
+<option value="6000">J&T hemat - 6000</option>
+<option value="9000">Sicepat expres - 9000</option>
+</select>
+<select id="bayar">
+<option>COD</option>
+<option>Transfer</option>
+<option>alfamart</option>
+<option>indomaret</option>
+</select>
+ <div class="total">Total Bayar: Rp<span id="finalTotal"></span></div><button class="checkout-btn" onclick="buatPesanan()">Buat Pesanan</button> <br><br> <button onclick="closeCheckout()">Batal</button>
+
+</div>
+</div><!-- CHAT --><div class="chat-box" id="chatBox">
+<div class="chat-header">Chat Penjual</div>
+<div class="chat-messages" id="chatMessages"></div>
+<div class="chat-input">
+<input id="chatInput" placeholder="Tulis pesan">
+<button onclick="sendChat()">Kirim</button>
+</div>
+</div>
+ <script>
+function rupiah(n){
+return " " + Number(n).toLocaleString("id-ID")
+}
+
+let products=[
+{ id:1,name:"Sepatu",variants:[{name:"39",price:120000},{name:"40",price:125000},{name:"41",price:130000}],img:"sepatu.jpeg"},
+{ id:2,name:"infinix hot50 4G",variants:[{name:"128GB/8GB",price:1579900},{name:"256GB/6GB",price:1859900}],img:"hot50.webp"},
+{ id:3,name:"samsung J2 prime",variants:[{name:"8GB/1,5GB - second",price:350000},{name:"8GB/1,5GB - new",price:650000}],img:"J2 PRIME.jpg"},
+{ id:4,name:"Headset jete",price:150000,img:"headset.jpeg"},
+{ id:5,name:"ROG Strix G16",variants:[{name:"ROG Strix G16 G614JU (i7 Gen 13 + RTX 4050)",price:18972000},{name:"ROG Strix G16 G614JV (i7 Gen 13 + RTX 4060)",price:22995000},{name:"ROG Strix G16 G614NV (i7 Gen 13 + RTX 4060)",price:21895000},{name:"ROG Strix G16 G614NU (i7 Gen 13 + RTX 4050)",price:18785000}],img:"Strix_G16_KV_16x9.webp"},
+];
+
+let cart=[];
+let orders=[];
+let selectedProduct=null;
+
+function renderProducts(){
+let html="";
+products.forEach(p=>{
+let price=p.price||p.variants[0].price;
+html+=`<div class="card">
+<img src="${p.img}">
+<h4>${p.name}</h4>
+<div class="price">Rp ${rupiah(price)}</div>
+<div class="actions">
+<button class="btn-view" onclick="lihatProduk(${p.id})">Lihat</button>
+<button class="btn-buy" onclick="lihatProduk(${p.id})">Beli</button>
+</div>
+</div>`;
+});
+
+document.getElementById("products").innerHTML=html;
+}
+
+function lihatProduk(id){
+let p=products.find(x=>x.id===id);
+selectedProduct=p;
+
+let select=document.getElementById("variantSelect");
+let area=document.getElementById("variantArea");
+
+if(p.variants){
+area.style.display="block";
+select.innerHTML="";
+
+p.variants.forEach(v=>{
+let o=document.createElement("option");
+o.value=v.price;
+o.text=v.name+" - Rp"+v.price;
+select.add(o);
+});
+
+}else{
+area.style.display="none";
+}
+
+document.getElementById("detailImg").src=p.img;
+document.getElementById("detailName").innerText=p.name;
+document.getElementById("productModal").style.display="flex";
+}
+
+function addToCart(){
+let price;
+let name=selectedProduct.name;
+
+if(selectedProduct.variants){
+let s=document.getElementById("variantSelect");
+price=Number(s.value);
+name+=" - "+s.options[s.selectedIndex].text.split(" - ")[0];
+}else{
+price=selectedProduct.price;
+}
+
+cart.push({name,price});
+renderCart();
+closeModal();
+}
+
+function renderCart(){
+let html="";
+let total=0;
+
+cart.forEach((c,i)=>{
+html+=`<li>${c.name} - ${rupiah(c.price)} <button onclick="removeCart(${i})">Hapus</button></li>`
+total+=c.price;
+});
+
+if(cart.length===0) html="<i>Keranjang kosong</i>";
+
+document.getElementById("cartList").innerHTML=html;
+document.getElementById("cartTotal").innerText="Rp "+rupiah(total);
+}
+
+function removeCart(i){
+cart.splice(i,1);
+renderCart();
+}
+
+function closeModal(){
+ document.getElementById("productModal").style.display="none";
+}
+
+function openCheckout(){
+if(cart.length===0){alert("Keranjang kosong");return;}
+
+let html="";
+let total=0;
+
+cart.forEach(c=>{
+html+=`<div class="checkout-item"><span>${c.name}</span><span>Rp ${rupiah(c.price)}</span></div>`;
+total+=c.price;
+});
+
+document.getElementById("checkoutItems").innerHTML=html;
+document.getElementById('checkoutTotal').innerText=rupiah(total)
+
+let ongkir=document.getElementById("kurir").value;
+
+document.getElementById("finalTotal").innerText=rupiah(Number(total)+Number(ongkir));
+
+document.getElementById("checkoutModal").style.display="flex";
+}
+
+function closeCheckout(){
+ document.getElementById("checkoutModal").style.display="none";
+}
+
+function buatPesanan(){
+let nama=document.getElementById("nama").value;
+let hp=document.getElementById("hp").value;
+let alamat=document.getElementById("alamat").value;
+
+if(!nama||!hp||!alamat){alert("Isi data dulu");return;}
+
+let items=[...cart];
+
+let metode=document.getElementById("bayar").value;
+let kode="";
+
+if(metode==="alfamart (Kode Angka)"){
+kode=generatealfamartCode();
+}else if(metode==="indomaret (Kode Unik)"){
+kode=generateindomaretCode();
+}
+
+orders.push({
+items,
+status:"Menunggu Pembayaran",
+metode,
+kode
+});
+
+cart=[];
+renderCart();
+closeCheckout();
+renderOrders();
+
+let index=orders.length-1;
+
+setTimeout(()=>{
+orders[index].status="Dikemas";
+renderOrders();
+},5000);
+
+setTimeout(()=>{
+orders[index].status="Dikirim";
+renderOrders();
+},30000);
+
+}
+
+function renderOrders(){
+let html="";
+
+orders.forEach((o,i)=>{
+html+=`<div class="order-card">`;
+
+o.items.forEach(it=>{  
+html+=`${it.name} - Rp ${rupiah(it.price)}<br>`;  
+});
+
+html+=`<div class="status">Status: ${o.status}</div>`;
+ if(o.kode){
+html+=`<div style="font-size:12px">Kode Bayar: ${o.kode}</div>`;
+}
+
+if(o.status==="Dikirim"){
+html+=`<button class="rate-btn" onclick="rateOrder(${i})">Pesanan Diterima & Nilai ⭐</button>`;
+}
+
+html+=`</div>`;
+});
+
+document.getElementById("ordersList").innerHTML=html;
+}
+
+function rateOrder(i){
+orders[i].status="Selesai ⭐⭐⭐⭐⭐";
+renderOrders();
+}
+
+function toggleOrders(){
+let p=document.getElementById("ordersPanel");
+if(p.style.display==="block"){
+p.style.display="none";
+}else{
+p.style.display="block";
+}
+}
+
+/* CHAT */
+function toggleChat(){
+let c=document.getElementById("chatBox");
+c.style.display=c.style.display==="flex"?"none":"flex";
+}
+
+function sendChat(){
+let input=document.getElementById("chatInput");
+let msg=input.value;
+if(!msg)return;
+
+let box=document.getElementById("chatMessages");
+box.innerHTML+=`<div class='msg-user'>${msg}</div>`;
+
+setTimeout(()=>{
+box.innerHTML+=`<div class='msg-seller'>Baik kak, pesanan siap diproses 👍</div>`;
+box.scrollTop=box.scrollHeight;
+},600);
+
+input.value="";
+}
+ function generatealfamartCode(){
+return Math.floor(1000+Math.random()*9000)+" - "+
+       Math.floor(1000+Math.random()*9000)+" - "+
+       Math.floor(1000+Math.random()*9000)+" - "+
+       Math.floor(1000+Math.random()*9000);
+}
+
+function generateindomaretCode(){
+let chars="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+function part(){
+  let text="";
+  for(let i=0;i<4;i++){
+    text+=chars.charAt(Math.floor(Math.random()*chars.length));
+  }
+  return text;
+}
+return part()+"-"+part()+"-"+part()+"-"+part();
+}
+
+/* FLASH SALE */
+let flashTime=900;
+
+function timer(){
+let m=Math.floor(flashTime/60);
+let s=flashTime%60;
+
+document.getElementById("timer").innerText=m+":"+(s<10?"0":"")+s;
+flashTime--;
+
+if(flashTime<0){
+flashTime=900;
+renderFlash();
+}
+}
+
+let flashItems = [];
+
+function renderFlash(){
+let html="";
+flashItems=[];
+
+let shuffled = [...products].sort(()=>0.5 - Math.random());
+let selected = shuffled.slice(0,4);
+
+selected.forEach((p,i)=>{
+let base=p.price||p.variants[0].price;
+
+let random = Math.random();
+let discount;
+
+if(random < 0.08){
+  discount = Math.floor(Math.random()*5)+95; // 95-99
+}else{
+  discount = Math.floor(Math.random()*66)+25; // 25-90
+}
+
+let newPrice=Math.floor(base*(100-discount)/100);
+
+// stok berdasarkan diskon
+let stock;
+if(discount >= 95){
+  stock = 5;
+}else{
+  stock = Math.floor((100-discount)/2)+5; 
+  // makin besar diskon → makin kecil stok
+}
+
+flashItems.push({name:p.name,price:newPrice,stock});
+
+html+=`<div class="card">
+<img src="${p.img}">
+<h4>${p.name}</h4>
+<div class="old">Rp ${rupiah(base)}</div>
+<div class="price">Rp ${rupiah(newPrice)}</div>
+<div style="color:red;font-size:12px">Diskon ${discount}%</div>
+<div style="font-size:12px">Stok: <span id="stock${i}">${stock}</span></div>
+<button class="btn-buy" onclick="buyFlash(${i})">Beli</button>
+</div>`;
+});
+
+document.getElementById("flashProducts").innerHTML=html;
+}
+ 
+ function buyFlash(i){
+if(flashItems[i].stock <= 0){
+  alert("Stok habis!");
+  return;
+}
+
+flashItems[i].stock--;
+
+cart.push({
+  name:flashItems[i].name + " Flash",
+  price:flashItems[i].price
+});
+
+renderCart();
+updateFlashStock();
+}
+ 
+ function updateFlashStock(){
+flashItems.forEach((item,i)=>{
+let el=document.getElementById("stock"+i);
+if(el) el.innerText=item.stock;
+});
+}
+
+setInterval(()=>{
+flashItems.forEach(item=>{
+if(item.stock > 0){
+  item.stock--; // berkurang otomatis
+}
+});
+updateFlashStock();
+},3000); // tiap 3 detik
+
+setInterval(timer,1000);
+
+renderProducts();
+renderFlash();
+
+</script></body>
+</html>
